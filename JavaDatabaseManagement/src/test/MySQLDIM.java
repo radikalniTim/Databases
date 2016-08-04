@@ -46,9 +46,14 @@ public class MySQLDIM{
 		 * EXAMPLE: object.setData ("myDatabaseTableName", "userName", "jondo", 
 		 * 							"firstName", "John", "lastName", "Doe"........);
 		*/
+		
+		Connection myConn = null;
+		Statement myStmt = null;
+		
 		try{ 
-			Connection myConn = DriverManager.getConnection(databaseURL, databaseUserName, databasePassword);
-			Statement myStmt = myConn.createStatement();
+			myConn = DriverManager.getConnection(databaseURL, databaseUserName, databasePassword);
+			myStmt = myConn.createStatement();
+			
 			myStmt.executeQuery("SELECT * FROM " + databaseTableName + ";");
 			
 			//Transferring content of vararg columnNameorValue in to the array for easyer data manipulation			 		
@@ -58,10 +63,16 @@ public class MySQLDIM{
 			myStmt.executeUpdate ("ALTER TABLE " + databaseTableName + " AUTO_INCREMENT = 1");
 			
 			//Inserting new row of data	based on reference column name
-			myStmt.executeUpdate("INSERT INTO `"+ databaseName + "`.`" 
-								+ databaseTableName + "`(`"+referenceColumnName+"`) VALUES ('"+referenceColumnValue+"')");		
-		
-			  
+			myStmt.executeUpdate("INSERT INTO `"
+								+ databaseName + 
+								"`.`" 
+								+ databaseTableName + 
+								"`(`"
+								+referenceColumnName+
+								"`) VALUES ('"
+								+referenceColumnValue+
+								"')");		
+					  
 			 /* If we only say to itterate through array columnNorV and INSERT (insead of UPDATE) data, 
 			  * every value we wish to insert, will be inserted in new row in table, as a new entry.*/			  					
 			int i=0;
@@ -91,6 +102,10 @@ public class MySQLDIM{
 		catch (SQLException e){			
 			e.printStackTrace();
 		}
+		finally {
+		    if (myStmt != null) try {myStmt.close();} catch (SQLException logOrIgnore) {}
+		    if (myConn != null) try {myConn.close();} catch (SQLException logOrIgnore) {} 
+		}
 	}	
 /*---------------------------------------------------------------------------------------------------
 * 						METHOD FOR FETCHING DATA FROM TO THE TABLE
@@ -108,17 +123,19 @@ public class MySQLDIM{
 		
 		//array list used for storing data from search query
 		ArrayList<String> fetchedData = new ArrayList<String>();
-		
+		Connection myConn = null;		
+		Statement myStmt = 	null;
+		ResultSet myRS = null;
 		try {			
-			Connection myConn = DriverManager.getConnection(databaseURL, databaseUserName, databasePassword);			
-			Statement myStmt = myConn.createStatement();	
-			ResultSet myRS = myStmt.executeQuery("SELECT * FROM " 
-												+ databaseTableName + 
-												" WHERE BINARY " 
-												+ searchInColumnName + 
-												" = '" 
-												+ searchValue + 
-												"' LIMIT 0,18446744073709551615;");	//bigInt value->all values that correspond to search querry
+			myConn = DriverManager.getConnection(databaseURL, databaseUserName, databasePassword);			
+			myStmt = myConn.createStatement();	
+			myRS = myStmt.executeQuery("SELECT * FROM " 
+										+ databaseTableName + 
+										" WHERE BINARY " 
+										+ searchInColumnName + 
+										" = '" 
+										+ searchValue + 
+										"' LIMIT 0,18446744073709551615;");	//bigInt value->all values that correspond to search querry
 			
 			
 			/* whille loop shifts pointer on every selected row, and for loop adds data from each selected 
@@ -133,6 +150,11 @@ public class MySQLDIM{
 		}
 		catch (SQLException e){
 			e.printStackTrace();
+		}
+		finally {
+			if (myRS != null) try {myRS .close();} catch (SQLException logOrIgnore) {}
+		    if (myStmt != null) try {myStmt.close();} catch (SQLException logOrIgnore) {}
+		    if (myConn != null) try {myConn.close();} catch (SQLException logOrIgnore) {} 
 		}
 		
 		return fetchedData; //when calling this method, you must return data in array list with generic type <String>
@@ -153,9 +175,13 @@ public class MySQLDIM{
 		
 		String[] columnNorV = columnNameOrValue;
 	
+		Connection myConn = null;		
+		Statement myStmt = 	null;
+		
 		try {			
-			Connection myConn = DriverManager.getConnection(databaseURL, databaseUserName, databasePassword);			
-			Statement myStmt = myConn.createStatement();	
+			myConn = DriverManager.getConnection(databaseURL, databaseUserName, databasePassword);			
+			myStmt = myConn.createStatement();
+			
 			myStmt.executeQuery("SELECT * FROM " + databaseTableName + ";");
 			
 			int i = 0;
@@ -183,7 +209,11 @@ public class MySQLDIM{
 		}
 		catch (SQLException e){
 			e.printStackTrace();
-		}		
+		}
+		finally {
+		    if (myStmt != null) try {myStmt.close();} catch (SQLException logOrIgnore) {}
+		    if (myConn != null) try {myConn.close();} catch (SQLException logOrIgnore) {} 
+		}
 	}	
 /*---------------------------------------------------------------------------------------------------
 * 						METHOD FOR DELETING DATA IN TABLE
@@ -194,10 +224,13 @@ public class MySQLDIM{
 		
 		/* IMPORTANT!!!
 		 * IF, SOMEHOW, VALUE OF VARIABLE referenceColumnValue STAYS EMPTY, ALL DATA FROM TABLE IS GOING TO BE DELETED!!!!!*/
-		 
+		
+		Connection myConn = null;		
+		Statement myStmt = 	null;
+		
 		try {			
-			Connection myConn = DriverManager.getConnection(databaseURL, databaseUserName, databasePassword);			
-			Statement myStmt = myConn.createStatement();								
+			myConn = DriverManager.getConnection(databaseURL, databaseUserName, databasePassword);			
+			myStmt = myConn.createStatement();								
 			int j=myStmt.executeUpdate("DELETE FROM `" 
 								+ databaseName + 
 								"`.`"  
@@ -209,12 +242,16 @@ public class MySQLDIM{
 								"'");
 			
 			//checking if updating went OK
-			if (j>0) System.out.println("Java had succsessfully updated data in database: " + databaseName + "." + databaseTableName);			
+			if (j>0) System.out.println("Java had succsessfully DELETED data in database: " + databaseName + "." + databaseTableName);			
 			else System.out.println("ERROR while DELETING data in: " + databaseName + "." + databaseTableName);
 		}
 		catch (SQLException e){
 			e.printStackTrace();
-		}		
+		}
+		finally {
+		    if (myStmt != null) try {myStmt.close();} catch (SQLException logOrIgnore) {}
+		    if (myConn != null) try {myConn.close();} catch (SQLException logOrIgnore) {} 
+		}
 	}	
 }
 
